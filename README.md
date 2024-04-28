@@ -62,6 +62,7 @@ This report presents the instruction to install and run the code for the project
                        }"
                    && cat inference/GIT_BASE_COCO/coco.score.json
                    "
+                   
 #Evaluate the result
         python -m generativeimage2text.inference -p "{'type': 'evaluate_on_coco_caption', 'res_file': 'inference/GIT_BASE_COCO/coco.tsv','label_file': 'data/coco_caption/test.caption.tsv'}"
         Scores could be varied due to the misalignment of the environment, e.g. pytorch version.
