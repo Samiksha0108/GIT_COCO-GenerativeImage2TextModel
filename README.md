@@ -1,5 +1,6 @@
 # Introduction
-This report presents the instruction to install and run the code for the project ""
+This report presents the instruction to install and run the code for the project.
+
 
 # Installation
     -Install [azfuse](https://github.com/microsoft/azfuse). The tool is used to automatically download the data. The configuration of AzFuse has already been in this repo.
@@ -14,6 +15,8 @@ This report presents the instruction to install and run the code for the project
         pip install -r requirements.txt
         python setup.py build develop
         Note: CUDA is required compulsory for the code to run. If you don't have a GPU, you can use the CPU version of the code by changing the `device` parameter in the `config.py` file to `cpu`.
+    - download the model
+        https://drive.google.com/file/d/1poXLUaxzlkDNE4kJBDnil_bORO6req87/view?usp=drive_link
 
 # Inference
     -Inference on a single image
@@ -63,6 +66,6 @@ This report presents the instruction to install and run the code for the project
                    && cat inference/GIT_BASE_COCO/coco.score.json
                    "
                    
-#Evaluate the result
+#   Evaluate the result
         python -m generativeimage2text.inference -p "{'type': 'evaluate_on_coco_caption', 'res_file': 'inference/GIT_BASE_COCO/coco.tsv','label_file': 'data/coco_caption/test.caption.tsv'}"
         Scores could be varied due to the misalignment of the environment, e.g. pytorch version.
