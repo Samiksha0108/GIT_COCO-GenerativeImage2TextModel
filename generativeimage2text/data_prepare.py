@@ -38,23 +38,36 @@ def generate_imagenet_unique_names():
 
 
 def prepare_coco_test():
-    image_folder = 'aux_data/raw_data/val2014'
-    json_file = 'aux_data/raw_data/dataset_coco.json'
-    infos = json.loads(read_to_buffer(json_file))['images']
-    infos = [i for i in infos if i['split'] == 'test']
-    assert all(i['filepath'] == 'val2014' for i in infos)
+    """
+    prepare the test set for coco captioning
+    Returns: None
+    """
+    image_folder = 'aux_data/raw_data/val2014' # the folder containing the images
+    json_file = 'aux_data/raw_data/dataset_coco.json' # the json file containing the captions
+    infos = json.loads(read_to_buffer(json_file))['images'] # the json file
+    infos = [i for i in infos if i['split'] == 'test'] # only use the test set
+    assert all(i['filepath'] == 'val2014' for i in infos) # all images are in val2014
+
     def gen_rows():
+        """
+        generate the rows for the tsv file
+        Returns: generator of rows
+        """
         for i in tqdm(infos):
-            payload = base64.b64encode(read_to_buffer(op.join(image_folder,
-                                                       i['filename'])))
-            yield i['cocoid'], payload
+            payload = base64.b64encode(read_to_buffer(op.join(image_folder,i['filename']))) # read the image
+            yield i['cocoid'], payload # yield the image
     tsv_writer(gen_rows(), 'data/coco_caption/test.img.tsv')
 
     def gen_cap_rows():
+        """
+        generate the rows for the caption tsv file
+        Returns:
+        """
         for i in tqdm(infos):
-            caps = [{'caption': j['raw']} for j in i['sentences']]
-            yield i['cocoid'], json_dump(caps)
+            caps = [{'caption': j['raw']} for j in i['sentences']]  # get the captions
+            yield i['cocoid'], json_dump(caps) # yield the captions
     tsv_writer(gen_cap_rows(), 'data/coco_caption/test.caption.tsv')
+
 
 if __name__ == '__main__':
     init_logging()

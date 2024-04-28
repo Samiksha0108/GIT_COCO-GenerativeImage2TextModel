@@ -65,6 +65,16 @@ class MinMaxResizeForTest(object):
 
 
 def test_git_inference_single_image(image_path, model_name, prefix):
+    """
+    This function is used to test the model on a single image. The model is loaded from the output folder and the
+    Args:
+        image_path: path to the image
+        model_name:  name of the model
+        prefix:  prefix to the caption
+
+    Returns:
+
+    """
     param = {}
     if File.isfile(f'aux_data/models/{model_name}/parameter.yaml'):
         param = load_from_yaml_file(f'aux_data/models/{model_name}/parameter.yaml')
@@ -132,31 +142,55 @@ def get_image_transform(param):
     return transforms
 
 def test_git_inference_single_tsv(image_tsv, model_name, question_tsv, out_tsv):
+    """
+    This function is used to test the model on the test data. The model is loaded from the output folder and the
+    test data is loaded from the tsv file. The output is saved in the out_tsv file.
+    Args:
+        image_tsv:  tsv file containing the image data
+        model_name:  name of the model
+        question_tsv:  tsv file containing the question data
+        out_tsv:  output tsv file
+
+    Returns: None
+
+    """
+
+    # load the parameter yaml file
     param = {}
     if File.isfile(f'output/{model_name}/parameter.yaml'):
-        param = load_from_yaml_file(f'output/{model_name}/parameter.yaml')
+        param = load_from_yaml_file(f'output/{model_name}/parameter.yaml') # load the parameter yaml file
 
+    # tokenizer
     tokenizer = BertTokenizer.from_pretrained('bert-base-uncased', do_lower_case=True)
-    image_tsv = TSVFile(image_tsv)
+    #tokenizer = BertTokenizer.from_pretrained('google-bert', do_lower_case=True) # models could be downloaded from huggingface
+    image_tsv = TSVFile(image_tsv) # tsv is generated from the data preparation
     question_tsv = TSVFile(question_tsv) if question_tsv else None
-
     transforms = get_image_transform(param)
 
     # model
-    model = get_git_model(tokenizer, param)
-    pretrained = f'output/{model_name}/snapshot/model.pt'
-    checkpoint = torch_load(pretrained)['model']
-    load_state_dict(model, checkpoint)
-    model.eval()
+    model = get_git_model(tokenizer, param) # get the model
+    pretrained = f'output/{model_name}/snapshot/model.pt'  # model should be saved in the output folder
+    checkpoint = torch_load(pretrained)['model'] # load the model
+    load_state_dict(model, checkpoint) # load the model state dict
+    model.eval() # set the model to evaluation mode
 
-    torch.cuda.set_device(get_mpi_local_rank())
-    model.cuda()
+    torch.cuda.set_device(get_mpi_local_rank()) # set the device to the local rank
+    model.cuda() # move the model to cuda
 
     # prefix
     max_text_len = 40
     rank = get_mpi_rank()
     world_size = get_mpi_size()
+
     def get_rank_specific_tsv(rank):
+        """
+        This function is used to get the rank specific tsv file
+        Args:
+            rank:  rank of the process
+
+        Returns:
+
+        """
         return '{}.{}.{}.tsv'.format(out_tsv, rank, world_size)
     if world_size > 1:
         curr_out_tsv = get_rank_specific_tsv(rank)
@@ -198,7 +232,8 @@ def test_git_inference_single_tsv(image_tsv, model_name, question_tsv, out_tsv):
                     result = {'answer': answer, 'question_id': q['question_id']}
                     yield json_dump(result),
     else:
-        def gen_rows():
+        # no question, just generate the caption
+        def gen_rows(): # generate the rows for the tsv file
             for i  in tqdm(range(curr_start, curr_end)):
                 key, col = image_tsv[i]
                 img = pilimg_from_base64(col)
@@ -210,6 +245,7 @@ def test_git_inference_single_tsv(image_tsv, model_name, question_tsv, out_tsv):
                     })
                 cap = tokenizer.decode(result['predictions'][0].tolist(), skip_special_tokens=True)
                 yield key, json_dump([{'caption': cap}])
+    # write the output to the tsv file
     tsv_writer(gen_rows(), curr_out_tsv)
     if world_size > 1 and rank == 0:
         all_sub_tsv = [get_rank_specific_tsv(i) for i in range(world_size)]
@@ -252,6 +288,15 @@ def convert_tsv_to_coco_format(res_tsv, outfile,
         json.dump(results, fp)
 
 def iter_caption_to_json(iter_caption, json_file):
+    """
+    Convert the caption to json format
+    Args:
+        iter_caption: iterator of caption
+        json_file:  json file to save the caption
+
+    Returns:
+
+    """
     # save gt caption to json format so thet we can call the api
     key_captions = [(key, json.loads(p)) for key, p in iter_caption]
 

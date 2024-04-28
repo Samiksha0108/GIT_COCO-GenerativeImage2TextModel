@@ -206,6 +206,9 @@ def create_decoder(decoder_type, norm_type,
         return BertEncoderAsDecoder(encoder)
 
 class AutoRegressiveBeamSearch(object):
+    """
+    A simple auto-regressive beam search.
+    """
     def __init__(
         self,
         eos_index: int,
@@ -772,6 +775,9 @@ class SmoothLabelCrossEntropyLoss(nn.Module):
 
 
 class CaptioningModel(nn.Module):
+    """
+    A simple image captioning model that takes an image and produces a caption.
+    """
     def __init__(
         self,
         visual,
@@ -1054,6 +1060,9 @@ class CaptioningModel(nn.Module):
         return logits[:, -1, :].float()
 
 class GeneratorWithBeamSearch(object):
+    """
+    A generator that uses beam search to generate captions.
+    """
     def __init__(
         self,
         eos_index: int,

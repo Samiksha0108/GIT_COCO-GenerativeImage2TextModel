@@ -8,7 +8,7 @@ from .layers.decoder import (TransformerDecoderTextualHead,
 
 def get_git_model(tokenizer, param):
     image_encoder = get_image_encoder(
-        param.get('image_encoder_type', 'CLIPViT_B_16'),
+        param.get('image_encoder_type', 'CLIPViT_L_14'),
         input_resolution=param.get('test_crop_size', 224),
     )
     text_decoder = TransformerDecoderTextualHead(
@@ -24,18 +24,19 @@ def get_git_model(tokenizer, param):
         decoder_type='bert_en',
         visual_projection_type='linearLn',
     )
-    #decoder = AutoRegressiveBeamSearch(
-        #eos_index=tokenizer.sep_token_id,
-        #max_steps=40,
-        #beam_size=1,
-        #per_node_beam_size=1,
-        #fix_missing_prefix=True,
-    #)
+    # decoder = AutoRegressiveBeamSearch(
+    #     eos_index=tokenizer.sep_token_id,
+    #     max_steps=40,#default 40
+    #     beam_size=1,
+    #     per_node_beam_size=1,
+    #     fix_missing_prefix=True,
+    # )
+    #
     decoder = GeneratorWithBeamSearch(
         eos_index=tokenizer.sep_token_id,
-        #max_steps=40,
-        max_steps=1024,
-        beam_size=4,
+        max_steps=40,
+        #max_steps=1024, # 1024 as default but it is too slow
+        beam_size=4, # 4 as default
         length_penalty=0.6,
     )
 
